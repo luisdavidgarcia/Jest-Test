@@ -1,5 +1,5 @@
 // acquire functions from stock portfolio
-const StockPortfolio = require('./stock-portfolio-functions.js');
+const {StockPortfolio, ShareSaleException} = require('./stock-portfolio-functions.js');
 
 describe('Testing Class Creation', () => {
   let target;
@@ -27,6 +27,7 @@ describe('Tests regarding adding/removing stock', () => {
   const robloxShares = 10;
   const gamestopTicker = "GME";
   const gamestopShares = 5;
+  const uniqueShares = 2;
 
   // populate portfolio to have 5 "GME" and 10 "RBLX" shares
   beforeEach(() => {
@@ -44,7 +45,7 @@ describe('Tests regarding adding/removing stock', () => {
   test('Testing for Unique Shares -- success', () => {
     // expect a result of 2 since only "GME" and "RBLX"
     let result = target.totalUniqueStocks();
-    expect(result).toBe(2);
+    expect(result).toBe(uniqueShares);
   });
 
   // Test to remove stock from portfolio
@@ -52,7 +53,29 @@ describe('Tests regarding adding/removing stock', () => {
     // expect there to only be RBLX shares
     target.makeSale(gamestopTicker, gamestopShares);
     expect(target.stockTickerSymbols).not.toContain(gamestopTicker);
-    expect(target.numberOfShares).toBe(10);
+    expect(target.numberOfShares).toBe(robloxShares);
+  });
+
+  // Test to see how many shares there are for a specific ticker 
+  test('Testing counting how many shares for a symbol -- success', () => {
+    // expect there to be 5 gamestop shares
+    expect(target.totalSharesPerSymbol(gamestopTicker)).toBe(gamestopShares);
+    // expect there to be 10 roblox shares
+    expect(target.totalSharesPerSymbol(robloxTicker)).toBe(robloxShares);
+  });
+
+  // Test to see that only owned shares are in portfolio
+  test('Testing to check only owned shares -- success', () => {
+    let result = target.isShareOwned("DOGX"); 
+    expect(result).toBe(false);
+  });
+
+  // Test to see if exeception is thrown :w
+  test('Testing exception for trying to Oversell -- success', () => {
+    error = new ShareSaleException();
+    const expectedErrorMessage = `Cannot sell 10 shares of ${gamestopTicker} as only 5 shares are owned`;
+    // except to not be able to sell  
+    expect(() => target.makeSale(gamestopTicker, 10)).toThrowError(new ShareSaleException(expectedErrorMessage));
   });
 });
 
